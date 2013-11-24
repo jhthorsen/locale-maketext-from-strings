@@ -74,9 +74,12 @@ METHODS
     This method will write the I18N code to disk. Use this when the "load"
     time goes up.
 
+    NOTE! This method does not check for existing files - they will be
+    overwritte without warning.
+
     Example one-liners:
 
-      $ perl -e'(require Locale::Maketext::From::Strings)->generate("MyApp::I18N")'
+      $ perl -MLocale::Maketext::From::Strings=generate -e1 MyApp::I18N
       $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...
 
   load
@@ -111,6 +114,9 @@ METHODS
       $data = $self->parse($file);
 
     Will parse $file and store the key value pairs in $data.
+
+  import
+    See "generate" for example one-liner.
 
 COPYRIGHT
     This program is free software, you can redistribute it and/or modify it

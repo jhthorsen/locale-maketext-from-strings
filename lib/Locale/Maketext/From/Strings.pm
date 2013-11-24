@@ -154,9 +154,12 @@ sub new {
 This method will write the I18N code to disk. Use this when the L</load> time
 goes up.
 
+NOTE! This method does not check for existing files - they will be overwritte
+without warning.
+
 Example one-liners:
 
-  $ perl -e'(require Locale::Maketext::From::Strings)->generate("MyApp::I18N")'
+  $ perl -MLocale::Maketext::From::Strings=generate -e1 MyApp::I18N
   $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...
 
 =cut
@@ -181,7 +184,6 @@ sub generate {
     my($code, $kv);
 
     $language =~ s/\.strings$// or next;
-    -s catfile($namespace_dir, "$language.pm") and next;
     $code = $self->_package_code($language);
     $kv = $self->parse(catfile $path, $file);
 
@@ -294,6 +296,20 @@ sub parse {
   return $data;
 }
 
+=head2 import
+
+See L</generate> for example one-liner.
+
+=cut
+
+sub import {
+  my $class = shift;
+
+  if(@_ and $_[0] eq 'generate') {
+    $class->generate(@ARGV);
+  }
+}
+
 sub _mkdir {
   my @path = splitdir shift;
   my @current_path;
@@ -352,4 +368,4 @@ Jan Henning Thorsen - C<jhthorsen@cpan.org>
 
 =cut
 
-__PACKAGE__;
+1;

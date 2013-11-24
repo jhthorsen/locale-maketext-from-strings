@@ -1,4 +1,5 @@
 Revision history for Locale-Maketext-From-Strings
 
 0.01
-       * Can load() and generate() from .strings
+       * Can load() and generate() from .strings.
+       * Can execute one-liner commands.
