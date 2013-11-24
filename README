@@ -78,6 +78,8 @@ METHODS
         });
       }
 
+    See also Mojolicious::Plugin::I18N.
+
   parse
       $data = $class->parse($file);
 

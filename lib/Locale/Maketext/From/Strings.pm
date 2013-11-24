@@ -159,6 +159,8 @@ namespace + "I18N". Example L<Mojolicious> app:
     });
   }
 
+See also L<Mojolicious::Plugin::I18N>.
+
 =cut
 
 sub load {
