@@ -14,8 +14,8 @@ WriteMakefile(
     resources => {
       license => 'http://dev.perl.org/licenses/',
       homepage => 'https://metacpan.org/release/Locale-Maketext-From-Strings',
-      bugtracker => 'https://github.com/jhthorsen/locale-maketext-from-strings',
-      repository => 'https://github.com/jhthorsen/locale-maketext-from-strings',
+      bugtracker => 'https://github.com/jhthorsen/locale-maketext-from-strings/issues',
+      repository => 'https://github.com/jhthorsen/locale-maketext-from-strings.git',
     },
   },
   test => {
