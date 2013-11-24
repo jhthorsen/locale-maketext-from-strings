@@ -8,10 +8,10 @@ SYNOPSIS
       use Locale::Maketext::From::Strings;
 
       # in-memory
-      Locale::Maketext::From::Strings->load('./18n' => 'MyApp::18N');
+      Locale::Maketext::From::Strings->load('./18n' => 'MyApp::I18N');
 
       # to disk
-      Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::18N' => './lib');
+      Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::I18N' => './lib');
 
 DESCRIPTION
     This module will parse ".strings" file used in the Apple world and
@@ -42,15 +42,41 @@ DESCRIPTION
 METHODS
   generate
       Locale::Maketext::From::Strings->generate($path => $namespace => $out_dir);
+      Locale::Maketext::From::Strings->generate($namespace);
 
     This method will write the I18N packages to disk. Default $out_dir is
-    "lib" in working directory.
+    "lib" in working directory. Default $path is "./i18n".
+
+    Example one-liners:
+
+      $ perl -e'(require Locale::Maketext::From::Strings)->generate(@ARGV)' MyApp::I18N
+      $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...;
 
   load
       Locale::Maketext::From::Strings->load($directory => $namespace);
 
     Will parse "language.strings" files from $path and generage in-memory
     packages in the given $namespace.
+
+    Default $directory is "./i18n". Default $namespace is the caller
+    namespace + "I18N". Example Mojolicious app:
+
+      package MyApp;
+      use Locale::Maketext::From::Strings;
+      use base 'Mojolicious';
+
+      sub startup {
+        my $self = sihft;
+        my $default_lang = 'en';
+
+        Locale::Maketext::From::Strings->load($self->home->rel_dir('i18n'));
+
+        $self->helper(l => sub {
+          my $c = shift;
+          $c->stash->{i18n} ||= MyApp::I18N->get_handle($c->session('lang'), $default_lang);
+          $c->stash->{i18n}->maketext(@_);
+        });
+      }
 
   parse
       $data = $class->parse($file);

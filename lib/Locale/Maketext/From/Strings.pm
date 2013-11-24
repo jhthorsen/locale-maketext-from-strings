@@ -13,10 +13,10 @@ Locale::Maketext::From::Strings - Parse Apple .strings files
   use Locale::Maketext::From::Strings;
 
   # in-memory
-  Locale::Maketext::From::Strings->load('./18n' => 'MyApp::18N');
+  Locale::Maketext::From::Strings->load('./18n' => 'MyApp::I18N');
 
   # to disk
-  Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::18N' => './lib');
+  Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::I18N' => './lib');
 
 =head1 DESCRIPTION
 
@@ -77,18 +77,30 @@ our $VERSION = '0.01';
 =head2 generate
 
   Locale::Maketext::From::Strings->generate($path => $namespace => $out_dir);
+  Locale::Maketext::From::Strings->generate($namespace);
 
 This method will write the I18N packages to disk. Default C<$out_dir> is
-"lib" in working directory.
+"lib" in working directory. Default C<$path> is "./i18n".
+
+Example one-liners:
+
+  $ perl -e'(require Locale::Maketext::From::Strings)->generate(@ARGV)' MyApp::I18N
+  $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...;
 
 =cut
 
 sub generate {
   my($class, $path, $namespace, $out_dir) = @_;
-  my $namespace_dir = $namespace;
-  my $code;
+  my($code, $namespace_dir);
 
+  unless(defined $namespace) {
+    $namespace = $path;
+    $path = '';
+  }
+
+  $namespace_dir = $namespace;
   $namespace_dir =~ s!::!/!g;
+  $path ||= 'i18n';
   $out_dir ||= 'lib';
   _mkdir(catfile $out_dir, $namespace_dir);
 
@@ -127,11 +139,35 @@ sub generate {
 Will parse C<language.strings> files from C<$path> and generage in-memory
 packages in the given C<$namespace>.
 
+Default L<$directory> is "./i18n". Default C<$namespace> is the caller
+namespace + "I18N". Example L<Mojolicious> app:
+
+  package MyApp;
+  use Locale::Maketext::From::Strings;
+  use base 'Mojolicious';
+
+  sub startup {
+    my $self = sihft;
+    my $default_lang = 'en';
+
+    Locale::Maketext::From::Strings->load($self->home->rel_dir('i18n'));
+
+    $self->helper(l => sub {
+      my $c = shift;
+      $c->stash->{i18n} ||= MyApp::I18N->get_handle($c->session('lang'), $default_lang);
+      $c->stash->{i18n}->maketext(@_);
+    });
+  }
+
 =cut
 
 sub load {
   my($class, $path, $namespace) = @_;
-  my $namespace_dir = $namespace;
+  my $namespace_dir;
+
+  $path ||= 'i18n';
+  $namespace ||= do { local $_ = caller; $_ ."::I18N" };
+  $namespace_dir = $namespace;
 
   $namespace_dir =~ s!::!/!g;
   eval $class->_namespace($namespace) or die $@;
@@ -188,7 +224,7 @@ sub parse {
 
 sub _mkdir {
   my @path = splitdir shift;
-  my @current_path = (shift @path);
+  my @current_path;
 
   for my $part (@path) {
     push @current_path, $part;
@@ -210,7 +246,7 @@ package $namespace;
 use base 'Locale::Maketext';
 our \%Lexicon = ( _AUTO => 1 );
 our \%LANGUAGES = (); # key = language name, value = class name
-1;
+"$namespace";
   PACKAGE
 }
 
@@ -242,4 +278,4 @@ Jan Henning Thorsen - C<jhthorsen@cpan.org>
 
 =cut
 
-1;
+__PACKAGE__;
