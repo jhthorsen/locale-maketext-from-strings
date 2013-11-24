@@ -9,3 +9,4 @@
 ^MYMETA.*
 ^Locale-Maketext-From-Strings
 ^t/out.*
+^README.pod
