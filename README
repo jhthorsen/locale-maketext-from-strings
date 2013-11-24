@@ -1,0 +1,66 @@
+NAME
+    Locale::Maketext::From::Strings - Parse Apple .strings files
+
+VERSION
+    0.01
+
+SYNOPSIS
+      use Locale::Maketext::From::Strings;
+
+      # in-memory
+      Locale::Maketext::From::Strings->load('./18n' => 'MyApp::18N');
+
+      # to disk
+      Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::18N' => './lib');
+
+DESCRIPTION
+    This module will parse ".strings" file used in the Apple world and
+    generate in memory perl-packages used by the Locale::Maketext module.
+
+    This module can parse most of the formatting mentioned here:
+    <http://blog.lingohub.com/developers/2013/03/i18n-resource-file-formats-
+    ios-strings-files/>.
+
+    *   Key-value pairs are delimited with the equal character (=), and
+        terminated by a semicolon (;).
+
+    *   Keys and values are surrounded by double quotes (").
+
+    *   Place-holders look can be: %.2f, %d, %1$s:
+
+          qr{\%[\d|\.]*\$*\d*[dsf]\b}
+
+    *   Comments start at the beginning of the line and span the whole line.
+
+    *   Multi-line comments are enclosed in /* */.
+
+    *   Single-line comments start with double slashes (//).
+
+    *   The specification says it expect UTF-16LE encoding by default, but
+        this module expected UTF-8 by default.
+
+METHODS
+  generate
+      Locale::Maketext::From::Strings->generate($path => $namespace => $out_dir);
+
+    This method will write the I18N packages to disk. Default $out_dir is
+    "lib" in working directory.
+
+  load
+      Locale::Maketext::From::Strings->load($directory => $namespace);
+
+    Will parse "language.strings" files from $path and generage in-memory
+    packages in the given $namespace.
+
+  parse
+      $data = $class->parse($file);
+
+    Will parse $file and store the key value pairs in $data.
+
+COPYRIGHT
+    This program is free software, you can redistribute it and/or modify it
+    under the terms of the Artistic License version 2.0.
+
+AUTHOR
+    Jan Henning Thorsen - "jhthorsen@cpan.org"
+

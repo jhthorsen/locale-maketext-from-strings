@@ -6,4 +6,4 @@
 ^blib/
 ^Makefile$
 ^MANIFEST.*
-^I18N-Strings-Parser
+t/out.*
