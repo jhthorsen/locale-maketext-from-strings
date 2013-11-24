@@ -6,4 +6,6 @@
 ^blib/
 ^Makefile$
 ^MANIFEST.*
-t/out.*
+^MYMETA.*
+^Locale-Maketext-From-Strings
+^t/out.*
