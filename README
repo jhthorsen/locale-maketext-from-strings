@@ -7,11 +7,14 @@ VERSION
 SYNOPSIS
       use Locale::Maketext::From::Strings;
 
-      # in-memory
-      Locale::Maketext::From::Strings->load('./18n' => 'MyApp::I18N');
+      my $strings = Locale::Maketext::From::Strings->new(
+                      path => '/path/to/strings',
+                      namespace => 'MyApp::I18N',
+                      out_dir => 'lib',
+                    );
 
-      # to disk
-      Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::I18N' => './lib');
+      $strings->load; # in memory
+      $strings->generate; # to disk
 
 DESCRIPTION
     This module will parse ".strings" file used in the Apple world and
@@ -37,29 +40,53 @@ DESCRIPTION
     *   Single-line comments start with double slashes (//).
 
     *   The specification says it expect UTF-16LE encoding by default, but
-        this module expected UTF-8 by default.
+        this module expect UTF-8 instead.
+
+        NOTE! This might change in future release. Pass "encoding" to
+        constructor if you want to be sure about the value.
+
+ATTRIBUTES
+  encoding
+    Holds the encoding used when reading the ".strings" files. Defaults to
+    "UTF-8".
+
+  namespace
+    Package name of where to "generate" or "load" code into. Default to the
+    caller namespace.
+
+  out_dir
+    Directory to where files should be written to. Defaults to "lib".
+
+  path
+    Path to ".strings" files. Defaults to "i18n".
 
 METHODS
-  generate
-      Locale::Maketext::From::Strings->generate($path => $namespace => $out_dir);
-      Locale::Maketext::From::Strings->generate($namespace);
+  new
+      $self = Locale::Maketext::From::Strings->new(%attributes);
+      $self = Locale::Maketext::From::Strings->new($attributes);
 
-    This method will write the I18N packages to disk. Default $out_dir is
-    "lib" in working directory. Default $path is "./i18n".
+    Object constructor.
+
+  generate
+      Locale::Maketext::From::Strings->generate($namespace);
+      $self->generate;
+
+    This method will write the I18N code to disk. Use this when the "load"
+    time goes up.
 
     Example one-liners:
 
-      $ perl -e'(require Locale::Maketext::From::Strings)->generate(@ARGV)' MyApp::I18N
-      $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...;
+      $ perl -e'(require Locale::Maketext::From::Strings)->generate("MyApp::I18N")'
+      $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...
 
   load
-      Locale::Maketext::From::Strings->load($directory => $namespace);
+      Locale::Maketext::From::Strings->load($path);
+      $self->load;
 
-    Will parse "language.strings" files from $path and generage in-memory
-    packages in the given $namespace.
+    Will parse "language.strings" files from "path" and generage in-memory
+    packages in the given "namespace".
 
-    Default $directory is "./i18n". Default $namespace is the caller
-    namespace + "I18N". Example Mojolicious app:
+    Example Mojolicious app:
 
       package MyApp;
       use Locale::Maketext::From::Strings;
@@ -81,7 +108,7 @@ METHODS
     See also Mojolicious::Plugin::I18N.
 
   parse
-      $data = $class->parse($file);
+      $data = $self->parse($file);
 
     Will parse $file and store the key value pairs in $data.
 

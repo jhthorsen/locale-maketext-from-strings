@@ -5,12 +5,14 @@ use Test::More;
 
 plan skip_all => 'Cannot read t/i18n/en.strings' unless -r 't/i18n/en.strings';
 
-Locale::Maketext::From::Strings->load('t/i18n', 'MyApp::I18N');
+my $strings = Locale::Maketext::From::Strings->new(path => 't/i18n', namespace => 'MyApp::I18N');
+
+$strings->load;
 
 no warnings 'once';
 
-is $INC{'MyApp/I18N.pm'}, 'GENERATED', 'MyApp/I18N.pm generated';
-is $INC{'MyApp/I18N/en.pm'}, 'GENERATED', 'MyApp/I18N/en.pm generated';
+is $INC{'MyApp/I18N.pm'}, 'GENERATED', 'MyApp/I18N.pm loaded';
+is $INC{'MyApp/I18N/en.pm'}, 'GENERATED', 'MyApp/I18N/en.pm loaded';
 
 isa_ok 'MyApp::I18N', 'Locale::Maketext';
 isa_ok 'MyApp::I18N::en', 'MyApp::I18N';

@@ -12,11 +12,14 @@ Locale::Maketext::From::Strings - Parse Apple .strings files
 
   use Locale::Maketext::From::Strings;
 
-  # in-memory
-  Locale::Maketext::From::Strings->load('./18n' => 'MyApp::I18N');
+  my $strings = Locale::Maketext::From::Strings->new(
+                  path => '/path/to/strings',
+                  namespace => 'MyApp::I18N',
+                  out_dir => 'lib',
+                );
 
-  # to disk
-  Locale::Maketext::From::Strings->generate('./18n' => 'MyApp::I18N' => './lib');
+  $strings->load; # in memory
+  $strings->generate; # to disk
 
 =head1 DESCRIPTION
 
@@ -58,7 +61,10 @@ Single-line comments start with double slashes (//).
 =item *
 
 The specification says it expect UTF-16LE encoding by default, but this
-module expected UTF-8 by default.
+module expect UTF-8 instead.
+
+NOTE! This might change in future release. Pass L</encoding> to constructor
+if you want to be sure about the value.
 
 =back
 
@@ -72,52 +78,112 @@ use constant DEBUG => $ENV{MAKETEXT_FROM_STRINGS_DEBUG} ? 1 : 0;
 
 our $VERSION = '0.01';
 
+=head1 ATTRIBUTES
+
+=head2 encoding
+
+Holds the encoding used when reading the C<.strings> files. Defaults to
+"UTF-8".
+
+=cut
+
+sub encoding { shift->{encoding} ||= 'UTF-8' }
+
+=head2 namespace
+
+Package name of where to L</generate> or L</load> code into. Default to the
+caller namespace.
+
+=cut
+
+sub namespace {
+  my $self = shift;
+  $self->{namespace} ||= do {
+    my $caller = (caller 0)[0];
+    $caller = (caller 1) if $caller->isa(__PACKAGE__);
+    $caller .= '::I18N';
+  };
+}
+
+=head2 out_dir
+
+Directory to where files should be written to. Defaults to "lib".
+
+=cut
+
+sub out_dir { shift->{out_dir} ||= 'lib' }
+
+=head2 path
+
+Path to ".strings" files. Defaults to "i18n".
+
+=cut
+
+sub path { shift->{path} ||= 'i18n' }
+
+sub _namespace_dir {
+  my $self = shift;
+  $self->{_namespace_dir} ||= do {
+    my $dir = $self->namespace;
+    $dir =~ s!::!/!g;
+    $dir;
+  };
+}
+
 =head1 METHODS
+
+=head2 new
+
+  $self = Locale::Maketext::From::Strings->new(%attributes);
+  $self = Locale::Maketext::From::Strings->new($attributes);
+
+Object constructor.
+
+=cut
+
+sub new {
+  my $class = shift;
+  bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;
+}
 
 =head2 generate
 
-  Locale::Maketext::From::Strings->generate($path => $namespace => $out_dir);
   Locale::Maketext::From::Strings->generate($namespace);
+  $self->generate;
 
-This method will write the I18N packages to disk. Default C<$out_dir> is
-"lib" in working directory. Default C<$path> is "./i18n".
+This method will write the I18N code to disk. Use this when the L</load> time
+goes up.
 
 Example one-liners:
 
-  $ perl -e'(require Locale::Maketext::From::Strings)->generate(@ARGV)' MyApp::I18N
-  $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...;
+  $ perl -e'(require Locale::Maketext::From::Strings)->generate("MyApp::I18N")'
+  $ perl -Ilib -E'say +(require MyApp::I18N)->get_handle(shift)->maketext(@ARGV);' en "some key" ...
 
 =cut
 
 sub generate {
-  my($class, $path, $namespace, $out_dir) = @_;
-  my($code, $namespace_dir);
+  my $self = shift;
+  my($code, $namespace_dir, $path);
 
-  unless(defined $namespace) {
-    $namespace = $path;
-    $path = '';
+  unless(ref $self) {
+    $self = bless @_ ? @_ > 1 ? {@_} : !ref $_[0] ? { namespace => shift } : {%{$_[0]}} : {}, $self;
   }
 
-  $namespace_dir = $namespace;
-  $namespace_dir =~ s!::!/!g;
-  $path ||= 'i18n';
-  $out_dir ||= 'lib';
-  _mkdir(catfile $out_dir, $namespace_dir);
+  $path = $self->path;
+  $namespace_dir = catfile $self->out_dir, $self->_namespace_dir;
 
-  unless(-s "$namespace_dir.pm") {
-    _spurt($class->_namespace($namespace), catfile $out_dir, "$namespace_dir.pm");
-  }
-
+  _mkdir($namespace_dir);
+  _spurt($self->_namespace_code, $namespace_dir .'.pm') unless -s $namespace_dir .'.pm';
   opendir(my $DH, $path) or die "opendir $path: $!";
 
   for my $file (grep { /\.strings$/ } readdir $DH) {
     my $language = $file;
     my($code, $kv);
 
-    $language =~ s/\.strings$//;
+    $language =~ s/\.strings$// or next;
     -s catfile($namespace_dir, "$language.pm") and next;
-    $code = $class->_package($namespace, $language);
-    $kv = $class->parse(catfile $path, $file);
+    $code = $self->_package_code($language);
+    $kv = $self->parse(catfile $path, $file);
 
     local $Data::Dumper::Indent = 1;
     local $Data::Dumper::Sortkeys = 1;
@@ -126,21 +192,21 @@ sub generate {
     $kv =~ s!^\{!our %Lexicon = (!;
     $kv =~ s!\}$!);!;
     substr $code, -3, -3, $kv;
-    _spurt($code, catfile $out_dir, $namespace_dir, "$language.pm");
+    _spurt($code, catfile $namespace_dir, "$language.pm");
   }
 
-  return $class;
+  return $self;
 }
 
 =head2 load 
 
-  Locale::Maketext::From::Strings->load($directory => $namespace);
+  Locale::Maketext::From::Strings->load($path);
+  $self->load;
 
-Will parse C<language.strings> files from C<$path> and generage in-memory
-packages in the given C<$namespace>.
+Will parse C<language.strings> files from L</path> and generage in-memory
+packages in the given L</namespace>.
 
-Default L<$directory> is "./i18n". Default C<$namespace> is the caller
-namespace + "I18N". Example L<Mojolicious> app:
+Example L<Mojolicious> app:
 
   package MyApp;
   use Locale::Maketext::From::Strings;
@@ -164,44 +230,48 @@ See also L<Mojolicious::Plugin::I18N>.
 =cut
 
 sub load {
-  my($class, $path, $namespace) = @_;
-  my $namespace_dir;
+  my $self = shift;
+  my($namespace, $namespace_dir, $path);
 
-  $path ||= 'i18n';
-  $namespace ||= do { local $_ = caller; $_ ."::I18N" };
-  $namespace_dir = $namespace;
+  unless(ref $self) {
+    $self = bless @_ ? @_ > 1 ? {@_} : !ref $_[0] ? { path => shift } : {%{$_[0]}} : {}, $self;
+  }
 
-  $namespace_dir =~ s!::!/!g;
-  eval $class->_namespace($namespace) or die $@;
+  $namespace = $self->namespace;
+  $namespace_dir = $self->_namespace_dir;
+  $path = $self->path;
+
+  eval $self->_namespace_code or die $@;
   $INC{"$namespace_dir.pm"} = 'GENERATED';
   opendir(my $DH, $path) or die "opendir $path: $!";
 
   for my $file (grep { /\.strings$/ } readdir $DH) {
     my $language = $file;
-    $language =~ s/\.strings$//;
+    $language =~ s/\.strings$// or next;
 
-    eval $class->_package($namespace, $language) or die $@;
-    $class->parse(catfile($path, $file), eval "\\%$namespace\::$language\::Lexicon");
+    eval $self->_package_code($language) or die $@;
+    $self->parse(catfile($path, $file), eval "\\%$namespace\::$language\::Lexicon");
     $INC{"$namespace_dir/$language.pm"} = 'GENERATED';
   }
 
-  return $class;
+  return $self;
 }
 
 =head2 parse
 
-  $data = $class->parse($file);
+  $data = $self->parse($file);
 
 Will parse C<$file> and store the key value pairs in C<$data>.
 
 =cut
 
 sub parse {
-  my($class, $file, $data) = @_;
+  my($self, $file, $data) = @_;
+  my $encoding = $self->{encoding} || 'UTF-8';
   my $buf = '';
 
   $data ||= {};
-  open my $FH, '<:encoding(UTF-8)', $file or die "read $file: $!";
+  open my $FH, "<:encoding($encoding)", $file or die "read $file: $!";
 
   while(<$FH>) {
     $buf .= $_;
@@ -236,11 +306,12 @@ sub _mkdir {
   }
 }
 
-sub _namespace {
-  my($class, $namespace) = @_;
+sub _namespace_code {
+  my $self = shift;
+  my $namespace = $self->namespace;
 
   if(eval "require $namespace; 1") {
-    return $class;
+    return $self;
   }
 
   return <<"  PACKAGE"
@@ -252,8 +323,9 @@ our \%LANGUAGES = (); # key = language name, value = class name
   PACKAGE
 }
 
-sub _package {
-  my($class, $namespace, $language) = @_;
+sub _package_code {
+  my($self, $language) = @_;
+  my $namespace = $self->namespace;
 
   return <<"  PACKAGE";
 \$${namespace}::LANGUAGES{$language} = "$namespace\::$language";

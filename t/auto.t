@@ -10,10 +10,13 @@ chdir 't';
 eval <<"CODE" or die $@;
 package MyApp;
 Locale::Maketext::From::Strings->load;
+our \$NS = Locale::Maketext::From::Strings->new->namespace;
 1;
 CODE
 
 no warnings 'once';
+
+is $MyApp::NS, 'MyApp::I18N', 'namespace()';
 
 is $INC{'MyApp/I18N.pm'}, 'GENERATED', 'MyApp/I18N.pm generated';
 is $INC{'MyApp/I18N/en.pm'}, 'GENERATED', 'MyApp/I18N/en.pm generated';
