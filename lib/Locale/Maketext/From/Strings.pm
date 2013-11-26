@@ -6,7 +6,7 @@ Locale::Maketext::From::Strings - Parse Apple .strings files
 
 =head1 VERSION
 
-0.01
+0.0101
 
 =head1 SYNOPSIS
 
@@ -98,7 +98,7 @@ use File::Spec::Functions qw( catfile splitdir );
 use Data::Dumper ();
 use constant DEBUG => $ENV{MAKETEXT_FROM_STRINGS_DEBUG} ? 1 : 0;
 
-our $VERSION = '0.01';
+our $VERSION = '0.0101';
 
 =head1 ATTRIBUTES
 
@@ -376,7 +376,7 @@ use base '$namespace';
 sub _spurt {
   my($content, $path) = @_;
   die qq{Can't open file "$path": $!} unless open my $FH, '>', $path;
-  die qq{Can't write to file "$path": $!} unless defined $FH->syswrite($content);
+  die qq{Can't write to file "$path": $!} unless defined syswrite $FH, $content;
 }
 
 =head1 COPYRIGHT
