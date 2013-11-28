@@ -6,7 +6,7 @@ Locale::Maketext::From::Strings - Parse Apple .strings files
 
 =head1 VERSION
 
-0.0101
+0.02
 
 =head1 SYNOPSIS
 
@@ -98,7 +98,7 @@ use File::Spec::Functions qw( catfile splitdir );
 use Data::Dumper ();
 use constant DEBUG => $ENV{MAKETEXT_FROM_STRINGS_DEBUG} ? 1 : 0;
 
-our $VERSION = '0.0101';
+our $VERSION = '0.02';
 
 =head1 ATTRIBUTES
 

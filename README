@@ -2,7 +2,7 @@ NAME
     Locale::Maketext::From::Strings - Parse Apple .strings files
 
 VERSION
-    0.0101
+    0.02
 
 SYNOPSIS
       use Locale::Maketext::From::Strings;

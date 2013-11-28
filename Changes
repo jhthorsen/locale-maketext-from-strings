@@ -1,5 +1,8 @@
 Revision history for Locale-Maketext-From-Strings
 
+0.02     Thu Nov 28 10:46:34 2013
+       * I don't want to support '90-perl
+
 0.0101   Tue Nov 26 09:40:35 2013
        * Can't locate object method "syswrite" via package "IO::Handle"
 

@@ -11,6 +11,9 @@ WriteMakefile(
     'Test::More' => '0.90',
   },
   META_MERGE => {
+    requires  => {
+      perl => '5.010001',
+    },
     resources => {
       license => 'http://dev.perl.org/licenses/',
       homepage => 'https://metacpan.org/release/Locale-Maketext-From-Strings',
