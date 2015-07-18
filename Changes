@@ -1,11 +1,12 @@
-Revision history for Locale-Maketext-From-Strings
+Revision history for perl distribution Locale-Maketext-From-Strings
 
-0.02     Thu Nov 28 10:46:34 2013
-       * I don't want to support '90-perl
+0.02 2013-11-28T10:46:34Z
+ - I don't want to support '90-perl
 
-0.0101   Tue Nov 26 09:40:35 2013
-       * Can't locate object method "syswrite" via package "IO::Handle"
+0.0101 2013-11-26T09:40:35Z
+ - Can't locate object method "syswrite" via package "IO::Handle"
 
-0.01     Sun Nov 24 15:51:35 2013
-       * Can load() and generate() from .strings.
-       * Can execute one-liner commands.
+0.01 2013-11-24T15:51:35Z
+ - Can load() and generate() from .strings.
+ - Can execute one-liner commands.
+

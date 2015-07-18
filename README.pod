@@ -1,0 +1,1 @@
+lib/Locale/Maketext/From/Strings.pm
