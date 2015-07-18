@@ -1,5 +1,8 @@
 Revision history for perl distribution Locale-Maketext-From-Strings
 
+0.03 2015-07-18T08:58:24+0200
+ - Require Perl 5.10
+
 0.02 2013-11-28T10:46:34Z
  - I don't want to support '90-perl
 
